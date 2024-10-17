@@ -1,29 +1,25 @@
-from flask import Flask, request, jsonify, render_template
-from EmotionDetection.emotion_detection import emotion_detector
+from flask import Flask, request, jsonify
+from EmotionDetection.emotion_detection import emotion_detector 
 
 app = Flask(__name__)
 
-@app.route('/')
-def home():
-    return render_template('index.html')
-
 @app.route('/emotionDetector', methods=['POST'])
-def emotion_detector_api():
-    text = request.form['text_to_analyze']
-    
-    result = emotion_detector(text)
-    
-    response_text = (
-        f"For the given statement, the system response is "
-        f"'anger': {result['anger']}, "
-        f"'disgust': {result['disgust']}, "
-        f"'fear': {result['fear']}, "
-        f"'joy': {result['joy']} and "
-        f"'sadness': {result['sadness']}. "
-        f"The dominant emotion is {result['dominant_emotion']}."
-    )
+def detect_emotion():
+    text_to_analyze = request.form.get('text_to_analyze', '')
 
-    return jsonify(response_text)
+    result = emotion_detector(text_to_analyze)
+
+    if result['dominant_emotion'] is None:
+        return jsonify({"error": "Invalid text! Please try again."}), 400
+
+    return jsonify({
+        'anger': result['anger'],
+        'disgust': result['disgust'],
+        'fear': result['fear'],
+        'joy': result['joy'],
+        'sadness': result['sadness'],
+        'dominant_emotion': result['dominant_emotion']
+    })
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0', port=5000)
